@@ -1,0 +1,46 @@
+{
+  "expo": {
+    "name": "Moto",
+    "slug": "Moto",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+ 
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "config":{
+        "googleMaps":{
+        "apiKey": "AIzaSyAVT7DjunN8YEDvzBHBdkS_FItM7PzkJqM"
+        }
+      },
+      "package": "com.andersonrosilho.Moto",
+      "permissions": [
+        "LOCATION",
+        "OPEN_URL"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "b7d657b4-51ce-4232-b922-60d821b1becd"
+      }
+    }
+  }
+}
