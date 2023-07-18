@@ -11,6 +11,7 @@ import { getDatabase, ref, set, child, get, push } from "firebase/database";
 import { useRoute } from '@react-navigation/native';
 import * as Updates from 'expo-updates';
 import { Linking } from 'react-native-web';
+import { Alert } from 'react-native';
 
 
 
@@ -60,7 +61,6 @@ const TelaInicial = ({ navigation }) => {
 
   const [NomeUsu, onChangeNomeUsu] = useState('');
   const [Motorista, onChangeMotorista] = useState('');
-  const [EmailMotorista, onChangeEmailMotorista] = useState('');
 
   let globalIdCorrida = '';
 
@@ -93,12 +93,9 @@ const realtimeConsulta = () => {
               const user = childSnapshot.val();
               const NomeUsu = usuarios.NomeUsu; // Obtém o objeto contendo os usuários
               const TelefoneUsu = usuarios.TelefoneUsu; // Obtém o objeto contendo os usuários
-              const EmailMotorista = usuarios.EmailUsu; // Obtém o objeto contendo os usuários
         
               onChangeNomeUsu(NomeUsu);
               onChangeTelefoneUsu(TelefoneUsu);
-              onChangeEmailMotorista(EmailMotorista);
-              console.log(EmailMotorista);
             });
           });
         }
@@ -112,8 +109,33 @@ const realtimeConsulta = () => {
 };
 
 
+const realtimeConsultaDisp = () => {
+  const dbRef = ref(getDatabase());
+  get(child(dbRef, '/disp')).then((snapshot) => {
+    if (snapshot.exists()) {
+      const dispKeys = Object.keys(snapshot.val());
+      const lastDispKey = dispKeys[dispKeys.length - 1];
 
- const realtime = () => {
+      const lastDispRef = child(dbRef, `/disp/${lastDispKey}`);
+      get(lastDispRef).then((lastDispSnapshot) => {
+        const lastDisp = lastDispSnapshot.val();
+        const moto = lastDisp.NomeUsu;
+        let replaceNome = moto.replace(/@/g, '-');
+        replaceNome = replaceNome.replace(/\./g, '-');
+         onChangeMotorista(replaceNome);
+      }).catch((error) => {
+        console.error(error);
+      });
+    }
+  }).catch((error) => {
+    console.error(error);
+  });
+};
+
+
+
+
+const realtime = () => {
   const db = getDatabase();
   const corridasRef = ref(db, 'Corridas');
 
@@ -122,29 +144,33 @@ const realtimeConsulta = () => {
   const idCorrida = novaCorridaRef.key;
   globalIdCorrida = idCorrida;
 
-  set(ref(db,'/corridas/'+replaceEmail + '/'), {
+  if (Motorista === '') {
+    Alert.alert('Sem motoristas disponíveis', 'Não temos motoristas diponivel no momento, tente novamente em instantes');
+    return;
+  }
+
+  set(ref(db, '/corridas/' + Motorista + '/'), {
     IdCorrida: idCorrida,
     NomeUsu: NomeUsu,
     Inicio: address,
     Fim: destinoD,
     Valor: valorCorrida.toFixed(2),
-    Telefone :TelefoneUsu,
-    FormaPagamento: "DINHEIRO",
-    Motorista: "",
-    EmailMotorista:EmailMotorista
-    
+    Telefone: TelefoneUsu,
+    FormaPagamento: 'DINHEIRO',
+    Motorista: Motorista,
   })
     .then(() => {
       toggleModal();
       setModalVisibleAguarda(true);
       VerificaMotoristaAceitou();
-
-
+      setModalVisibleAguarda(false);
+      setModalVisibleConfirma(true);
     })
     .catch((error) => {
       console.error(error);
     });
 };
+
   const onReady = (result) => {
     setResult(result);
     const valorPorKm = 1.50; // em reais
@@ -303,6 +329,7 @@ useEffect(() => {
   ChamaMapa();
   const interval = setInterval(() => {
     realtimeConsulta();
+    realtimeConsultaDisp();
    },5000)
    return () => {
     // Limpa o intervalo quando o componente for desmontado
@@ -310,22 +337,8 @@ useEffect(() => {
   };
 }, []);
 
-useEffect(() => {
-  const interval = setInterval(() => {
-    if (Motorista != "") {
-      setModalVisibleAguarda(false);
-      setModalVisibleConfirma(true);
-      console.log('OK');
-      clearInterval(interval);
-    } else {
-    }
-  }, 1000);
 
-  return () => {
-    // Limpa o intervalo quando o componente for desmontado
-    clearInterval(interval);
-  };
-},[Motorista]);
+
 
 // ATUALIZA BANCO DE DADOS PARA REALTIME
 const VerificaMotoristaAceitou = () =>{

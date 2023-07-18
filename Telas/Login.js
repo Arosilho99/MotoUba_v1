@@ -34,7 +34,7 @@ const LoginUsu = ({ navigation }) => {
       <TouchableOpacity onPress={() =>  {signInWithEmailAndPassword(auth, Login, Senha)
         .then((userCredential) => {
           // Signed in
-          if(Login == 'adm@motouba.com.br'){
+          if (Login.includes('@motouba.com.br')) {
             const user = userCredential.user;
             console.log("Usuario Logado com sucesso")
             navigation.navigate('TelaInicialMotorista',{Login});
