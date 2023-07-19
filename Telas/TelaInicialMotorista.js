@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { getDatabase, ref, get, child, push, set, remove } from 'firebase/database';
 import { useRoute } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'react-native';
 
 const TelaInicialMotorista = ({ navigation }) => {
   const [FormaPagamento, setFormaPagamento] = useState('');
@@ -94,12 +96,14 @@ const TelaInicialMotorista = ({ navigation }) => {
       <Text>{Inicio}</Text>
       <Text>{Fim}</Text>
       <Text>R${Valor}</Text>
+      <View style={styles.btns}>
       <TouchableOpacity style={styles.aceitar}>
-          <Text style={styles.aceitarText}>ACEITAR</Text>
+          <Image style={styles.iconImg} source={require('../Material/confirme.png')}/>
       </TouchableOpacity>
       <TouchableOpacity style={styles.recusar}>
-          <Text style={styles.recusarText}>RECUSAR</Text>
+        <Image style={styles.iconImg} source={require('../Material/rejeitado.png')}/>
       </TouchableOpacity>
+      </View>
       <View style={[styles.Disp, { backgroundColor: disponivelCor }]}>
         <TouchableOpacity style={styles.tchdisp} onPress={InsereDisp}>
           <Text style={styles.textDisp}>{disponivel}</Text>
@@ -114,7 +118,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     left: 10,
-    zIndex: 2,
   },
   Disp: {
     width: '95%',
@@ -130,22 +133,18 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   tchdisp: {},
-  aceitar:{
-    backgroundColor:'#228B22',
-  },
-  aceitarText:{
-    color:'white',
-    textAlign:'center',
-    fontSize: 30,
-  },
-  recusar:{
-    backgroundColor:'#FF0000',
-  },
-  recusarText:{
-    color:'white',
-    textAlign:'center',
-    fontSize: 30,
 
+  iconImg:{
+    width: 80,
+    height: 80,
+    marginRight: 50,
+  },
+ 
+  btns:{
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    justifyContent: 'center',
+  
   },
 });
 
