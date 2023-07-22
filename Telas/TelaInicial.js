@@ -162,7 +162,6 @@ const realtime = () => {
     .then(() => {
       toggleModal();
       setModalVisibleAguarda(true);
-      VerificaMotoristaAceitou();
       setModalVisibleAguarda(false);
       setModalVisibleConfirma(true);
     })
@@ -330,6 +329,7 @@ useEffect(() => {
   const interval = setInterval(() => {
     realtimeConsulta();
     realtimeConsultaDisp();
+    VerificaMotoristaAceitou();
    },5000)
    return () => {
     // Limpa o intervalo quando o componente for desmontado

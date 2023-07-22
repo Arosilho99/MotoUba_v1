@@ -10,6 +10,9 @@ const TelaInicialMotorista = ({ navigation }) => {
   const [Inicio, setInicio] = useState('');
   const [Fim, setFim] = useState('');
   const [Motorista, setMotorista] = useState('');
+  const [MotoristaNovo,setMotoristaNovo, onChangeMotoristaNovo] = useState('');
+
+  
   const [Valor, setValor] = useState('');
 
 
@@ -20,6 +23,93 @@ const TelaInicialMotorista = ({ navigation }) => {
   const { Login } = route.params;
   let replaceEmail = Login.replace(/@/g, '-');
   replaceEmail = replaceEmail.replace(/\./g, '-');
+
+ // TRATA A QUESTÃO DE RECUSA DE CORRIDA REALOCANDO O MOTORISTA NA LISTA DE DISPONIVEIS
+
+const realtimeConsultaDisp = () => {
+  const dbRef = ref(getDatabase());
+  get(child(dbRef, '/disp')).then((snapshot) => {
+      if (snapshot.exists()) {
+        const dispData = snapshot.val();
+        const dispKeys = Object.keys(dispData);
+        const lastDispKey = dispKeys[dispKeys.length - 1];
+        const lastDisp = dispData[lastDispKey];
+        const moto = lastDisp.NomeUsu;
+        let replaceNome = moto.replace(/@/g, '-').replace(/\./g, '-');
+
+        // Realoca o motorista na lista de disponíveis com o novo nome
+        set(ref(dbRef, '/disp/'+replaceNome+'/'), {
+          NomeUsu: Login, // Substitua Login pelo valor correto do nome do motorista
+        });
+
+        // Chama a função para atualizar o motorista no registro de corridas
+        setMotoristaNovo(replaceNome);
+        console.log(MotoristaNovo);
+
+      } else {
+        console.log('Dados não disponíveis.');
+      }
+    })
+    .catch((error) => {
+      console.error(error);
+    });
+};
+
+
+const updateMotorista = () => {
+  const dbRef = ref(getDatabase());
+  const motoristaRef = child(dbRef, '/corridas/' + replaceEmail + '/');
+
+  get(motoristaRef)
+    .then((snapshot) => {
+      if (snapshot.exists()) {
+        const motoristaData = snapshot.val();
+
+        // Verifique se o objeto motoristaData não é nulo antes de prosseguir
+        if (motoristaData) {
+          // Remover o registro com o nome antigo (replaceEmail)
+          remove(motoristaRef)
+            .then(() => {
+              console.log('Registro do motorista antigo removido com sucesso!');
+            })
+            .catch((error) => {
+              console.error('Erro ao remover o registro do motorista antigo:', error);
+            });
+
+          // Defina os novos dados do motorista com o novo nome (MotoristaNovo)
+          const motoristaNovoRef = child(dbRef, '/corridas/' + MotoristaNovo + '/');
+          set(motoristaNovoRef, {
+            ...motoristaData, // Mantenha as informações atuais
+            Motorista: MotoristaNovo, // Atualize o nome do motorista para 'MotoristaNovo' ou qualquer outro valor desejado
+          })
+          .then(() => {
+            console.log('Motorista atualizado com o novo nome com sucesso!');
+            setMotorista('MotoristaNovo'); // Atualize o estado local também, se necessário
+          })
+          .catch((error) => {
+            console.error('Erro ao atualizar o motorista com o novo nome:', error);
+          });
+        } else {
+          console.log('Registro do motorista não encontrado ou é nulo.');
+        }
+      } else {
+        console.log('Registro do motorista não encontrado.');
+      }
+    })
+    .catch((error) => {
+      console.error('Erro ao consultar o registro do motorista:', error);
+    });
+};
+
+
+  
+  const AtualizaCorrida = () => {
+    realtimeConsultaDisp();
+    updateMotorista()
+  }
+
+ // FIM DA RECUSA
+// 
 
   const realtimeConsulta = () => {
     const dbRef = ref(getDatabase());
@@ -92,15 +182,15 @@ const TelaInicialMotorista = ({ navigation }) => {
 
   return (
     <View style={styles.visualiza}>
-      <Text>{FormaPagamento}</Text>
-      <Text>{Inicio}</Text>
-      <Text>{Fim}</Text>
-      <Text>R${Valor}</Text>
+      {/* <Text style={styles.corr}>{FormaPagamento}</Text> */}
+      <Text style={styles.corr}>{Inicio}</Text>
+      <Text style={styles.corr}>{Fim}</Text>
+      <Text style={styles.corr}>R${Valor}</Text>
       <View style={styles.btns}>
       <TouchableOpacity style={styles.aceitar}>
           <Image style={styles.iconImg} source={require('../Material/confirme.png')}/>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.recusar}>
+      <TouchableOpacity style={styles.recusar} onPress={AtualizaCorrida}>
         <Image style={styles.iconImg} source={require('../Material/rejeitado.png')}/>
       </TouchableOpacity>
       </View>
@@ -137,7 +227,8 @@ const styles = StyleSheet.create({
   iconImg:{
     width: 80,
     height: 80,
-    marginRight: 50,
+    marginRight: 40,
+    top: 50,
   },
  
   btns:{
@@ -146,6 +237,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   
   },
+  corr:{
+    fontSize: 18,
+  }
 });
 
 export default TelaInicialMotorista;
