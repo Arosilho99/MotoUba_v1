@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { getDatabase, ref, get, child, push, set, remove } from 'firebase/database';
+import { getDatabase, ref, get, child, set, remove, push } from 'firebase/database';
 import { useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'react-native';
@@ -10,10 +10,15 @@ const TelaInicialMotorista = ({ navigation }) => {
   const [Inicio, setInicio] = useState('');
   const [Fim, setFim] = useState('');
   const [Motorista, setMotorista] = useState('');
-  const [MotoristaNovo,setMotoristaNovo, onChangeMotoristaNovo] = useState('');
+  const [NomeUsu, setNomeUsu] = useState('');
+  const [NomeUsuTxt, setNomeUsuTxt] = useState('');
 
-  
+  const [TelefoneUsu, setTelefoneUsu] = useState('');
+  const [ChaveUnica, setChaveUnica] = useState('');
+  const [MotoristaNovo,setMotoristaNovo, onChangeMotoristaNovo] = useState('');
   const [Valor, setValor] = useState('');
+  const [ValorTxt, setValorTxt] = useState('');
+
 
 
   const [disponivel, setDisponivel] = useState('INDISPONIVEL');
@@ -26,33 +31,75 @@ const TelaInicialMotorista = ({ navigation }) => {
 
  // TRATA A QUESTÃO DE RECUSA DE CORRIDA REALOCANDO O MOTORISTA NA LISTA DE DISPONIVEIS
 
-const realtimeConsultaDisp = () => {
-  const dbRef = ref(getDatabase());
-  get(child(dbRef, '/disp')).then((snapshot) => {
-      if (snapshot.exists()) {
-        const dispData = snapshot.val();
-        const dispKeys = Object.keys(dispData);
-        const lastDispKey = dispKeys[dispKeys.length - 1];
-        const lastDisp = dispData[lastDispKey];
-        const moto = lastDisp.NomeUsu;
-        let replaceNome = moto.replace(/@/g, '-').replace(/\./g, '-');
+ const realtime = (MotoristaNovo) => {
+  const db = getDatabase();
+  const corridasRef = ref(db, 'Corridas');
 
-        // Realoca o motorista na lista de disponíveis com o novo nome
-        set(ref(dbRef, '/disp/'+replaceNome+'/'), {
-          NomeUsu: Login, // Substitua Login pelo valor correto do nome do motorista
-        });
+  // Gerar um novo ID único usando push()
+  const novaCorridaRef = push(corridasRef);
+  const idCorrida = novaCorridaRef.key;
+  globalIdCorrida = idCorrida;
 
-        // Chama a função para atualizar o motorista no registro de corridas
-        setMotoristaNovo(replaceNome);
-        console.log(MotoristaNovo);
+  if (Motorista === '') {
+    Alert.alert('Sem motoristas disponíveis', 'Não temos motoristas diponivel no momento, tente novamente em instantes');
+    return;
+  }
 
-      } else {
-        console.log('Dados não disponíveis.');
-      }
+  set(ref(db, '/corridas/' + MotoristaNovo + '/'), {
+    IdCorrida: idCorrida,
+    NomeUsu: NomeUsu,
+    Inicio: Inicio,
+    Fim: Fim,
+    Valor: Valor,
+    Telefone: TelefoneUsu,
+    FormaPagamento: 'DINHEIRO',
+    Motorista: MotoristaNovo,
+    ChaveUnica: ChaveUnica
+  })
+    .then(() => {
+
     })
     .catch((error) => {
       console.error(error);
     });
+};
+
+ const realtimeConsultaDisp = () => {
+  const dbRef = ref(getDatabase());
+  get(child(dbRef, '/disp')).then((snapshot) => {
+    if (snapshot.exists()) {
+      const dispData = snapshot.val();
+      const dispKeys = Object.keys(dispData);
+      const lastDispKey = dispKeys[dispKeys.length - 1];
+      const indexLastDisp = dispKeys.indexOf(lastDispKey);
+
+      if (indexLastDisp > 0) {
+        const prevDispKey = dispKeys[indexLastDisp - 1];
+        const prevDisp = dispData[prevDispKey];
+        const moto = prevDisp.NomeUsu;
+        let replaceNomeNovo = moto.replace(/@/g, '-').replace(/\./g, '-');
+        
+        setMotoristaNovo(replaceNomeNovo);
+        if (replaceNomeNovo != ''){
+          realtime(replaceNomeNovo)
+        }
+        else{
+          const lastDisp = dispData[lastDispKey];
+        const moto = lastDisp.NomeUsu;
+        let replaceNomeNovo = moto.replace(/@/g, '-').replace(/\./g, '-');
+        setMotoristaNovo(replaceNomeNovo);
+        }
+        console.log('Novo motorista atualizado: ' + replaceNomeNovo);
+      } else {
+        console.log('Não há registros anteriores ao último motorista disponível.');
+      }
+    } else {
+      console.log('Dados não disponíveis.');
+    }
+  })
+  .catch((error) => {
+    console.error(error);
+  });
 };
 
 
@@ -76,19 +123,7 @@ const updateMotorista = () => {
               console.error('Erro ao remover o registro do motorista antigo:', error);
             });
 
-          // Defina os novos dados do motorista com o novo nome (MotoristaNovo)
-          const motoristaNovoRef = child(dbRef, '/corridas/' + MotoristaNovo + '/');
-          set(motoristaNovoRef, {
-            ...motoristaData, // Mantenha as informações atuais
-            Motorista: MotoristaNovo, // Atualize o nome do motorista para 'MotoristaNovo' ou qualquer outro valor desejado
-          })
-          .then(() => {
-            console.log('Motorista atualizado com o novo nome com sucesso!');
-            setMotorista('MotoristaNovo'); // Atualize o estado local também, se necessário
-          })
-          .catch((error) => {
-            console.error('Erro ao atualizar o motorista com o novo nome:', error);
-          });
+  
         } else {
           console.log('Registro do motorista não encontrado ou é nulo.');
         }
@@ -120,15 +155,31 @@ const updateMotorista = () => {
         const Fim = snapshot.val().Fim;
         const Motorista = snapshot.val().Motorista;
         const Valor = snapshot.val().Valor;
+        const NomeUsu = snapshot.val().NomeUsu;
+        const TelefoneUsu = snapshot.val().TelefoneUsu;
+        const ChaveUnica = snapshot.val().ChaveUnica;
 
         setFormaPagamento(FormaPagamento);
+        setNomeUsu(NomeUsu);
         setInicio(Inicio);
         setFim(Fim);
         setMotorista(Motorista);
         setValor(Valor);
+        setValorTxt('R$: '+Valor);
+
+        setChaveUnica(ChaveUnica)
+        setNomeUsuTxt('A CHAVE DE SEGURANÇA DE ' + NomeUsu.toUpperCase()+' É: '+ChaveUnica);
+
 
       } else {
-        console.log('No data available');
+        setFormaPagamento('');
+        setNomeUsu('');
+        setNomeUsuTxt('Aguardando Corrida...');
+        setInicio('');
+        setChaveUnica('');
+        setFim('');
+        setMotorista('');
+        setValorTxt('');
       }
     }).catch((error) => {
       console.error(error);
@@ -183,9 +234,12 @@ const updateMotorista = () => {
   return (
     <View style={styles.visualiza}>
       {/* <Text style={styles.corr}>{FormaPagamento}</Text> */}
+      <Text style={styles.corr}>{NomeUsuTxt}</Text>
       <Text style={styles.corr}>{Inicio}</Text>
       <Text style={styles.corr}>{Fim}</Text>
-      <Text style={styles.corr}>R${Valor}</Text>
+      <Text style={styles.corr}>{ValorTxt} </Text>
+      
+
       <View style={styles.btns}>
       <TouchableOpacity style={styles.aceitar}>
           <Image style={styles.iconImg} source={require('../Material/confirme.png')}/>

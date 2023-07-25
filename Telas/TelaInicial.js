@@ -57,10 +57,14 @@ const TelaInicial = ({ navigation }) => {
   const [isModalVisibleAguarda, setModalVisibleAguarda] = useState(false);
 
 
+
+
   const [data, setData] = useState([]);
 
   const [NomeUsu, onChangeNomeUsu] = useState('');
   const [Motorista, onChangeMotorista] = useState('');
+  const [ChaveUnica, setChaveUnica] = useState(Math.floor(10000 + Math.random() * 90000));
+
 
   let globalIdCorrida = '';
 
@@ -149,6 +153,7 @@ const realtime = () => {
     return;
   }
 
+
   set(ref(db, '/corridas/' + Motorista + '/'), {
     IdCorrida: idCorrida,
     NomeUsu: NomeUsu,
@@ -158,6 +163,8 @@ const realtime = () => {
     Telefone: TelefoneUsu,
     FormaPagamento: 'DINHEIRO',
     Motorista: Motorista,
+    ChaveUnica: ChaveUnica,
+    
   })
     .then(() => {
       toggleModal();
@@ -168,6 +175,7 @@ const realtime = () => {
     .catch((error) => {
       console.error(error);
     });
+
 };
 
   const onReady = (result) => {
@@ -275,6 +283,8 @@ const realtime = () => {
       });
     }
   }, [refreshKey,location]);
+
+
   const handlePress = () => {
     // Lógica do evento de pressionamento do botão
     // Usando a função de callback do estado para garantir a atualização correta
@@ -330,15 +340,12 @@ useEffect(() => {
     realtimeConsulta();
     realtimeConsultaDisp();
     VerificaMotoristaAceitou();
-   },5000)
+   },1000)
    return () => {
     // Limpa o intervalo quando o componente for desmontado
     clearInterval(interval);
   };
 }, []);
-
-
-
 
 // ATUALIZA BANCO DE DADOS PARA REALTIME
 const VerificaMotoristaAceitou = () =>{
@@ -450,7 +457,7 @@ const VerificaMotoristaAceitou = () =>{
        <Modal isVisible={isModalVisibleConfirma}>
        <View style={styles.ModalAguarda}>
        <Ionicons style={styles.iconImg} size={250} name="person-circle-outline" color="white"></Ionicons>
-        <Text style={styles.ModalConfimaTxt}> {Motorista.toUpperCase()} ACEITOU SUA CORRIDA</Text>
+        <Text style={styles.ModalConfimaTxt}>SUA CORRIDA FOI ACEITA POR UMA MOTORISTA, SEU CODIGO DE VERIFICAÇÃO É {ChaveUnica}:</Text>
         <TouchableOpacity onPress={toggleModalConfirma}><Text style={styles.ModalPagamentoItens}>CONFIRMAR</Text></TouchableOpacity>
 
        </View>
