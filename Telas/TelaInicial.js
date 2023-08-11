@@ -118,15 +118,17 @@ const realtimeConsultaDisp = () => {
   get(child(dbRef, '/disp')).then((snapshot) => {
     if (snapshot.exists()) {
       const dispKeys = Object.keys(snapshot.val());
-      const lastDispKey = dispKeys[dispKeys.length - 1];
+      const randomIndex = Math.floor(Math.random() * dispKeys.length); // Gerar índice aleatório
 
-      const lastDispRef = child(dbRef, `/disp/${lastDispKey}`);
-      get(lastDispRef).then((lastDispSnapshot) => {
-        const lastDisp = lastDispSnapshot.val();
-        const moto = lastDisp.NomeUsu;
+      const randomDispKey = dispKeys[randomIndex]; // Selecionar chave aleatória
+
+      const randomDispRef = child(dbRef, `/disp/${randomDispKey}`);
+      get(randomDispRef).then((randomDispSnapshot) => {
+        const randomDisp = randomDispSnapshot.val();
+        const moto = randomDisp.NomeUsu;
         let replaceNome = moto.replace(/@/g, '-');
         replaceNome = replaceNome.replace(/\./g, '-');
-         onChangeMotorista(replaceNome);
+        onChangeMotorista(replaceNome);
       }).catch((error) => {
         console.error(error);
       });
@@ -177,6 +179,8 @@ const realtime = () => {
     });
 
 };
+
+
 
   const onReady = (result) => {
     setResult(result);
@@ -457,7 +461,8 @@ const VerificaMotoristaAceitou = () =>{
        <Modal isVisible={isModalVisibleConfirma}>
        <View style={styles.ModalAguarda}>
        <Ionicons style={styles.iconImg} size={250} name="person-circle-outline" color="white"></Ionicons>
-        <Text style={styles.ModalConfimaTxt}>SUA CORRIDA FOI ACEITA POR UMA MOTORISTA, SEU CODIGO DE VERIFICAÇÃO É {ChaveUnica}:</Text>
+        <Text style={styles.ModalConfimaTxt}>SUA CORRIDA FOI ACEITA POR UMA MOTORISTA, SEU CODIGO DE VERIFICAÇÃO É: {ChaveUnica}</Text>
+        <Text style={styles.ModalConfimaTxt}>VOCÊ PODE USAR ESSE CODIGO PARA CONFIRMAR A MOTORISTA ANTES DE INICIAR A CORRIDA</Text>
         <TouchableOpacity onPress={toggleModalConfirma}><Text style={styles.ModalPagamentoItens}>CONFIRMAR</Text></TouchableOpacity>
 
        </View>
@@ -515,7 +520,7 @@ const VerificaMotoristaAceitou = () =>{
           <Ionicons size={60} name="logo-whatsapp" color="#25D366" />
         </TouchableOpacity>
           </View>  
-        
+          <Text style={styles.ChaveUnica}>{ChaveUnica}</Text>
     </View>
   );
 }
@@ -580,7 +585,6 @@ const styles = StyleSheet.create({
   botoes:{
     flex:1,
     flexDirection: 'row',
-    
   },
   valor:{
     // width:300,
@@ -660,9 +664,12 @@ const styles = StyleSheet.create({
 
     ModalConfimaTxt:{
       color: 'white',
-      fontSize:30,
+      fontSize:25,
       top:-50,
       textAlign: 'center',
+    },
+    ChaveUnica:{
+      left:5,
     },
 });
 
